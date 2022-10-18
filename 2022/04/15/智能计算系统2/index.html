@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.1.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"orangec.xyz","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="实验目的 使用Python语言numpy模块基于VGG19网络模型实现ImageNet数据集分类  优化：img2col改善计算性能   这篇文章重点记录了原始前向传播和优化的过程与理解 参考文章：智能计算系统实验3.3非实时图像风格迁移">
+<meta property="og:type" content="article">
+<meta property="og:title" content="智能计算系统 lab3.1 深度学习">
+<meta property="og:url" content="https://orangec.xyz/2022/04/15/%E6%99%BA%E8%83%BD%E8%AE%A1%E7%AE%97%E7%B3%BB%E7%BB%9F2/index.html">
+<meta property="og:site_name" content="Hello World">
+<meta property="og:description" content="实验目的 使用Python语言numpy模块基于VGG19网络模型实现ImageNet数据集分类  优化：img2col改善计算性能   这篇文章重点记录了原始前向传播和优化的过程与理解 参考文章：智能计算系统实验3.3非实时图像风格迁移">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s1.ax1x.com/2022/04/15/L8z0zT.jpg">
+<meta property="article:published_time" content="2022-04-15T09:42:00.000Z">
+<meta property="article:modified_time" content="2022-04-15T11:09:00.000Z">
+<meta property="article:author" content="wyl">
+<meta property="article:tag" content="ai">
+<meta property="article:tag" content="智能计算系统">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s1.ax1x.com/2022/04/15/L8z0zT.jpg">
+
+<link rel="canonical" href="https://orangec.xyz/2022/04/15/%E6%99%BA%E8%83%BD%E8%AE%A1%E7%AE%97%E7%B3%BB%E7%BB%9F2/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>智能计算系统 lab3.1 深度学习 | Hello World</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hello World</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://orangec.xyz/2022/04/15/%E6%99%BA%E8%83%BD%E8%AE%A1%E7%AE%97%E7%B3%BB%E7%BB%9F2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="wyl">
+      <meta itemprop="description" content="Just HelloWorld">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hello World">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          智能计算系统 lab3.1 深度学习
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-04-15 17:42:00 / 修改时间：19:09:00" itemprop="dateCreated datePublished" datetime="2022-04-15T17:42:00+08:00">2022-04-15</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ai/" itemprop="url" rel="index"><span itemprop="name">ai</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2022/04/15/%E6%99%BA%E8%83%BD%E8%AE%A1%E7%AE%97%E7%B3%BB%E7%BB%9F2/" class="post-meta-item leancloud_visitors" data-flag-title="智能计算系统 lab3.1 深度学习" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/04/15/%E6%99%BA%E8%83%BD%E8%AE%A1%E7%AE%97%E7%B3%BB%E7%BB%9F2/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/04/15/%E6%99%BA%E8%83%BD%E8%AE%A1%E7%AE%97%E7%B3%BB%E7%BB%9F2/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="实验目的"><a href="#实验目的" class="headerlink" title="实验目的"></a>实验目的</h2><ul>
+<li><p>使用Python语言numpy模块基于VGG19网络模型实现ImageNet数据集分类</p>
+</li>
+<li><p>优化：img2col改善计算性能</p>
+</li>
+</ul>
+<p>这篇文章重点记录了原始前向传播和优化的过程与理解</p>
+<p>参考文章：<a target="_blank" rel="noopener" href="https://blog.csdn.net/a429367172/article/details/117774314">智能计算系统实验3.3非实时图像风格迁移</a></p>
+<span id="more"></span>
+
+
+<hr>
+<h2 id="实验内容"><a href="#实验内容" class="headerlink" title="实验内容"></a>实验内容</h2><h3 id="ConvolutionalLayer"><a href="#ConvolutionalLayer" class="headerlink" title="ConvolutionalLayer"></a>ConvolutionalLayer</h3><p>简单前向传播：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">forward_slow</span>(<span class="params">self, _<span class="built_in">input</span></span>):</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># input格式 [batchN, Channel, Height, Width]</span></span><br><span class="line">    self.<span class="built_in">input</span> = _<span class="built_in">input</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 计算Padding后大小</span></span><br><span class="line">    height = self.<span class="built_in">input</span>.shape[<span class="number">2</span>] + self.padding*<span class="number">2</span></span><br><span class="line">    width = self.<span class="built_in">input</span>.shape[<span class="number">3</span>] + self.padding*<span class="number">2</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 创建PaddingInput</span></span><br><span class="line">    self.input_pad = np.zeros([self.<span class="built_in">input</span>.shape[<span class="number">0</span>], self.<span class="built_in">input</span>.shape[<span class="number">1</span>], height, width])</span><br><span class="line">    self.input_pad[:, :, self.padding:self.padding+self.<span class="built_in">input</span>.shape[<span class="number">2</span>], self.padding:self.padding+self.<span class="built_in">input</span>.shape[<span class="number">3</span>]] = self.<span class="built_in">input</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 计算输出矩阵大小并创建0矩阵</span></span><br><span class="line">    height_out = <span class="built_in">int</span>((height - self.kernel_size) / self.stride + <span class="number">1</span>)</span><br><span class="line">    width_out = <span class="built_in">int</span>((width - self.kernel_size) / self.stride + <span class="number">1</span>)</span><br><span class="line">    self.output = np.zeros([self.<span class="built_in">input</span>.shape[<span class="number">0</span>], self.channel_out, height_out, width_out])</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 四重循环计算输出矩阵每一个单元卷积后的值（主要的优化点）</span></span><br><span class="line">    <span class="keyword">for</span> idxn <span class="keyword">in</span> <span class="built_in">range</span>(self.<span class="built_in">input</span>.shape[<span class="number">0</span>]):</span><br><span class="line">        <span class="keyword">for</span> idxc <span class="keyword">in</span> <span class="built_in">range</span>(self.channel_out):</span><br><span class="line">            <span class="keyword">for</span> idxh <span class="keyword">in</span> <span class="built_in">range</span>(height_out):</span><br><span class="line">                <span class="keyword">for</span> idxw <span class="keyword">in</span> <span class="built_in">range</span>(width_out):</span><br><span class="line">                    h = idxh * self.stride</span><br><span class="line">                    w = idxw * self.stride</span><br><span class="line">                    self.output[idxn, idxc, idxh, idxw] = np.<span class="built_in">sum</span>(self.weight[:, :, :, idxc] * self.input_pad[idxn, :, h:h + self.kernel_size, w:w + self.kernel_size]) + self.bias[idxc]</span><br><span class="line">    <span class="keyword">return</span> self.output</span><br></pre></td></tr></table></figure>
+
+<p>优化思路：</p>
+<ul>
+<li>img2col+gemm<ul>
+<li>通过将输入特征和卷积核扁平化（类似于扁平化？），通过一个矩阵乘法计算出整一层的卷积结果</li>
+<li>这个方法非常耗费内存（显存）？</li>
+<li>图片来自*<a href="https://link.zhihu.com/?target=https://hal.archives-ouvertes.fr/file/index/docid/112631/filename/p1038112283956.pdf">High Performance Convolutional Neural Networks for Document Processing</a>*</li>
+</ul>
+</li>
+</ul>
+<p><a target="_blank" rel="noopener" href="https://imgtu.com/i/L8z0zT"><img src="https://s1.ax1x.com/2022/04/15/L8z0zT.jpg" alt="L8z0zT.jpg"></a></p>
+<ul>
+<li>WinoGrad，TODO</li>
+</ul>
+<p>优化结果（大部分来自参考文章）：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">im2col</span>(<span class="params">image, ksize, stride</span>):</span><br><span class="line">    <span class="comment"># image is a 4d tensor([batchsize, channel, height, width])</span></span><br><span class="line">    image_col = []</span><br><span class="line">    <span class="keyword">for</span> b <span class="keyword">in</span> <span class="built_in">range</span>(image.shape[<span class="number">0</span>]):</span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">0</span>, image.shape[<span class="number">2</span>] - ksize + <span class="number">1</span>, stride):</span><br><span class="line">            <span class="keyword">for</span> j <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">0</span>, image.shape[<span class="number">3</span>] - ksize + <span class="number">1</span>, stride):</span><br><span class="line">                col = image[b, :, i:i + ksize, j:j + ksize].reshape([-<span class="number">1</span>])</span><br><span class="line">                image_col.append(col)</span><br><span class="line">    image_col = np.array(image_col)</span><br><span class="line">    <span class="keyword">return</span> image_col</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">forward_fast</span>(<span class="params">self, _<span class="built_in">input</span></span>):</span><br><span class="line">    <span class="comment"># 同上</span></span><br><span class="line">    self.<span class="built_in">input</span> = _<span class="built_in">input</span></span><br><span class="line">    height = self.<span class="built_in">input</span>.shape[<span class="number">2</span>] + self.padding * <span class="number">2</span></span><br><span class="line">    width = self.<span class="built_in">input</span>.shape[<span class="number">3</span>] + self.padding * <span class="number">2</span></span><br><span class="line">    self.input_pad = np.zeros([self.<span class="built_in">input</span>.shape[<span class="number">0</span>], self.<span class="built_in">input</span>.shape[<span class="number">1</span>], height, width])</span><br><span class="line">    self.input_pad[:, :, self.padding:self.padding + self.<span class="built_in">input</span>.shape[<span class="number">2</span>], self.padding:self.padding + self.<span class="built_in">input</span>.shape[<span class="number">3</span>]] = self.<span class="built_in">input</span></span><br><span class="line">    height_out = <span class="built_in">int</span>((height - self.kernel_size) / self.stride + <span class="number">1</span>)</span><br><span class="line">    width_out = <span class="built_in">int</span>((width - self.kernel_size) / self.stride + <span class="number">1</span>)</span><br><span class="line">    self.output = np.zeros([self.<span class="built_in">input</span>.shape[<span class="number">0</span>], self.channel_out, height_out, width_out])</span><br><span class="line"></span><br><span class="line">    cin = self.<span class="built_in">input</span>.shape[<span class="number">0</span>]     <span class="comment"># Channel In</span></span><br><span class="line">    cout = self.weight.shape[<span class="number">3</span>]   <span class="comment"># Channel Out </span></span><br><span class="line">    col_weight = np.reshape(self.weight, [-<span class="number">1</span>, cout])</span><br><span class="line">    <span class="comment"># col reshape</span></span><br><span class="line">    self.col_image = im2col(self.input_pad, self.kernel_size, self.stride)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># matrix multiply</span></span><br><span class="line">    self.output = np.dot(self.col_image, col_weight) + self.bias</span><br><span class="line">    <span class="comment"># reshape to output</span></span><br><span class="line">    self.output = np.reshape(self.output, np.hstack(([cin], [height_out], [width_out], [cout])))</span><br><span class="line">    self.output = np.transpose(self.output, [<span class="number">0</span>, <span class="number">3</span>, <span class="number">1</span>, <span class="number">2</span>])</span><br><span class="line">    <span class="keyword">return</span> self.output</span><br></pre></td></tr></table></figure>
+
+<h3 id="MaxPoolingLayer"><a href="#MaxPoolingLayer" class="headerlink" title="MaxPoolingLayer"></a>MaxPoolingLayer</h3><p>简单前向传播：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">forward_slow</span>(<span class="params">self, _<span class="built_in">input</span></span>):	</span><br><span class="line">    self.<span class="built_in">input</span> = _<span class="built_in">input</span></span><br><span class="line">    self.max_index = np.zeros(self.<span class="built_in">input</span>.shape)</span><br><span class="line">    height_out = <span class="built_in">int</span>((self.<span class="built_in">input</span>.shape[<span class="number">2</span>] - self.kernel_size) / self.stride + <span class="number">1</span>)</span><br><span class="line">    width_out = <span class="built_in">int</span>((self.<span class="built_in">input</span>.shape[<span class="number">3</span>] - self.kernel_size) / self.stride + <span class="number">1</span>)</span><br><span class="line">    self.output = np.zeros([self.<span class="built_in">input</span>.shape[<span class="number">0</span>], self.<span class="built_in">input</span>.shape[<span class="number">1</span>], height_out, width_out])</span><br><span class="line">    <span class="keyword">for</span> idxn <span class="keyword">in</span> <span class="built_in">range</span>(self.<span class="built_in">input</span>.shape[<span class="number">0</span>]):</span><br><span class="line">        <span class="keyword">for</span> idxc <span class="keyword">in</span> <span class="built_in">range</span>(self.<span class="built_in">input</span>.shape[<span class="number">1</span>]):</span><br><span class="line">            <span class="keyword">for</span> idxh <span class="keyword">in</span> <span class="built_in">range</span>(height_out):</span><br><span class="line">                <span class="keyword">for</span> idxw <span class="keyword">in</span> <span class="built_in">range</span>(width_out):</span><br><span class="line">                    h = idxh * self.stride</span><br><span class="line">                    w = idxw * self.stride</span><br><span class="line">                    self.output[idxn, idxc, idxh, idxw] = np.<span class="built_in">max</span>(self.<span class="built_in">input</span>[idxn, idxc, h:h + self.kernel_size, w:w + self.kernel_size])</span><br><span class="line">                    <span class="keyword">return</span> self.output</span><br></pre></td></tr></table></figure>
+
+<p>这部分的优化较为简单，把所有求MaxPool需要的input的子矩阵提取出来之后再利用numpy的max函数的并行优化快速求最大值。缺点同样是内存开支较大</p>
+<p>快速前向传播：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">forward_fast</span>(<span class="params">self, _<span class="built_in">input</span></span>):</span><br><span class="line">        self.<span class="built_in">input</span> = _<span class="built_in">input</span></span><br><span class="line">        self.max_index = np.zeros(self.<span class="built_in">input</span>.shape)</span><br><span class="line">        height_out = <span class="built_in">int</span>((self.<span class="built_in">input</span>.shape[<span class="number">2</span>] - self.kernel_size) / self.stride + <span class="number">1</span>)</span><br><span class="line">        width_out = <span class="built_in">int</span>((self.<span class="built_in">input</span>.shape[<span class="number">3</span>] - self.kernel_size) / self.stride + <span class="number">1</span>)</span><br><span class="line">        self.input_vectorized = np.zeros([self.<span class="built_in">input</span>.shape[<span class="number">0</span>], self.<span class="built_in">input</span>.shape[<span class="number">1</span>],</span><br><span class="line">                                          height_out * width_out, self.kernel_size * self.kernel_size])</span><br><span class="line">        <span class="keyword">for</span> idxh <span class="keyword">in</span> <span class="built_in">range</span>(height_out):</span><br><span class="line">            <span class="keyword">for</span> idxw <span class="keyword">in</span> <span class="built_in">range</span>(width_out):</span><br><span class="line">                roi = self.<span class="built_in">input</span>[:, :,</span><br><span class="line">                      idxh * self.stride:idxh * self.stride + self.kernel_size,</span><br><span class="line">                      idxw * self.stride:idxw * self.stride + self.kernel_size]</span><br><span class="line">                self.input_vectorized[:, :, idxh * width_out + idxw] = roi.reshape([roi.shape[<span class="number">0</span>], roi.shape[<span class="number">1</span>], -<span class="number">1</span>])</span><br><span class="line">        self.output = np.<span class="built_in">max</span>(self.input_vectorized, axis=-<span class="number">1</span>).reshape([self.<span class="built_in">input</span>.shape[<span class="number">0</span>], self.<span class="built_in">input</span>.shape[<span class="number">1</span>], height_out, width_out])</span><br><span class="line">        <span class="keyword">return</span> self.output</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="整体代码"><a href="#整体代码" class="headerlink" title="整体代码"></a>整体代码</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br><span class="line">291</span><br><span class="line">292</span><br><span class="line">293</span><br><span class="line">294</span><br><span class="line">295</span><br><span class="line">296</span><br><span class="line">297</span><br><span class="line">298</span><br><span class="line">299</span><br><span class="line">300</span><br><span class="line">301</span><br><span class="line">302</span><br><span class="line">303</span><br><span class="line">304</span><br><span class="line">305</span><br><span class="line">306</span><br><span class="line">307</span><br><span class="line">308</span><br><span class="line">309</span><br><span class="line">310</span><br><span class="line">311</span><br><span class="line">312</span><br><span class="line">313</span><br><span class="line">314</span><br><span class="line">315</span><br><span class="line">316</span><br><span class="line">317</span><br><span class="line">318</span><br><span class="line">319</span><br><span class="line">320</span><br><span class="line">321</span><br><span class="line">322</span><br><span class="line">323</span><br><span class="line">324</span><br><span class="line">325</span><br><span class="line">326</span><br><span class="line">327</span><br><span class="line">328</span><br><span class="line">329</span><br><span class="line">330</span><br><span class="line">331</span><br><span class="line">332</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># coding=utf-8</span></span><br><span class="line"><span class="comment"># wyl 2022.4.15</span></span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> scipy.io <span class="keyword">as</span> sio</span><br><span class="line"><span class="keyword">from</span> PIL <span class="keyword">import</span> Image</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">im2col</span>(<span class="params">image, ksize, stride</span>):</span><br><span class="line">    <span class="comment"># image is a 4d tensor([batchsize, channel, height, width])</span></span><br><span class="line">    image_col = []</span><br><span class="line">    <span class="keyword">for</span> b <span class="keyword">in</span> <span class="built_in">range</span>(image.shape[<span class="number">0</span>]):</span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">0</span>, image.shape[<span class="number">2</span>] - ksize + <span class="number">1</span>, stride):</span><br><span class="line">            <span class="keyword">for</span> j <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">0</span>, image.shape[<span class="number">3</span>] - ksize + <span class="number">1</span>, stride):</span><br><span class="line">                col = image[b, :, i:i + ksize, j:j + ksize].reshape([-<span class="number">1</span>])</span><br><span class="line">                image_col.append(col)</span><br><span class="line">    image_col = np.array(image_col)</span><br><span class="line">    <span class="keyword">return</span> image_col</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">im2col_pool</span>(<span class="params">image, ksize, stride</span>):</span><br><span class="line">    <span class="comment"># image is a 4d tensor([batchsize, channel, height, width])</span></span><br><span class="line">    image_col = []</span><br><span class="line">    <span class="keyword">for</span> b <span class="keyword">in</span> <span class="built_in">range</span>(image.shape[<span class="number">0</span>]):</span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">0</span>, image.shape[<span class="number">2</span>] - ksize + <span class="number">1</span>, stride):</span><br><span class="line">            <span class="keyword">for</span> j <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">0</span>, image.shape[<span class="number">3</span>] - ksize + <span class="number">1</span>, stride):</span><br><span class="line">                col = image[b, :, i:i + ksize, j:j + ksize].reshape([image.shape[<span class="number">1</span>],-<span class="number">1</span>])</span><br><span class="line">                image_col.append(col)</span><br><span class="line">    image_col = np.array(image_col)</span><br><span class="line">    <span class="keyword">return</span> image_col</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">ConvolutionalLayer</span>(<span class="title class_ inherited__">object</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, kernel_size, channel_in, channel_out, padding, stride</span>):</span><br><span class="line">        self.kernel_size = kernel_size</span><br><span class="line">        self.channel_in = channel_in</span><br><span class="line">        self.channel_out = channel_out</span><br><span class="line">        self.padding = padding</span><br><span class="line">        self.stride = stride</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">init_param</span>(<span class="params">self, std=<span class="number">0.01</span></span>):</span><br><span class="line">        self.weight = np.random.normal(loc=<span class="number">0.0</span>, scale=std, size=(self.channel_in, self.kernel_size, self.kernel_size, self.channel_out))</span><br><span class="line">        self.bias = np.zeros([self.channel_out])</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, _<span class="built_in">input</span></span>):</span><br><span class="line">        <span class="keyword">return</span> self.forward_fast(_<span class="built_in">input</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward_fast</span>(<span class="params">self, _<span class="built_in">input</span></span>):</span><br><span class="line">        self.<span class="built_in">input</span> = _<span class="built_in">input</span></span><br><span class="line"></span><br><span class="line">        height = self.<span class="built_in">input</span>.shape[<span class="number">2</span>] + self.padding * <span class="number">2</span></span><br><span class="line">        width = self.<span class="built_in">input</span>.shape[<span class="number">3</span>] + self.padding * <span class="number">2</span></span><br><span class="line">        self.input_pad = np.zeros([self.<span class="built_in">input</span>.shape[<span class="number">0</span>], self.<span class="built_in">input</span>.shape[<span class="number">1</span>], height, width])</span><br><span class="line">        self.input_pad[:, :, self.padding:self.padding + self.<span class="built_in">input</span>.shape[<span class="number">2</span>], self.padding:self.padding + self.<span class="built_in">input</span>.shape[<span class="number">3</span>]] = self.<span class="built_in">input</span></span><br><span class="line">        height_out = <span class="built_in">int</span>((height - self.kernel_size) / self.stride + <span class="number">1</span>)</span><br><span class="line">        width_out = <span class="built_in">int</span>((width - self.kernel_size) / self.stride + <span class="number">1</span>)</span><br><span class="line">        self.output = np.zeros([self.<span class="built_in">input</span>.shape[<span class="number">0</span>], self.channel_out, height_out, width_out])</span><br><span class="line"></span><br><span class="line">        cin = self.<span class="built_in">input</span>.shape[<span class="number">0</span>]</span><br><span class="line">        cout = self.weight.shape[<span class="number">3</span>]</span><br><span class="line">        col_weight = np.reshape(self.weight, [-<span class="number">1</span>, cout])</span><br><span class="line">        <span class="comment"># col reshape</span></span><br><span class="line">        self.col_image = im2col(self.input_pad, self.kernel_size, self.stride)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># matrix multiply</span></span><br><span class="line">        self.output = np.dot(self.col_image, col_weight) + self.bias</span><br><span class="line">        <span class="comment"># reshape to output</span></span><br><span class="line">        self.output = np.reshape(self.output, np.hstack(([cin], [height_out], [width_out], [cout])))</span><br><span class="line">        self.output = np.transpose(self.output, [<span class="number">0</span>, <span class="number">3</span>, <span class="number">1</span>, <span class="number">2</span>])</span><br><span class="line">        <span class="keyword">return</span> self.output</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward_slow</span>(<span class="params">self, _<span class="built_in">input</span></span>):</span><br><span class="line">        self.<span class="built_in">input</span> = _<span class="built_in">input</span></span><br><span class="line">        height = self.<span class="built_in">input</span>.shape[<span class="number">2</span>] + self.padding*<span class="number">2</span></span><br><span class="line">        width = self.<span class="built_in">input</span>.shape[<span class="number">3</span>] + self.padding*<span class="number">2</span></span><br><span class="line">        self.input_pad = np.zeros([self.<span class="built_in">input</span>.shape[<span class="number">0</span>], self.<span class="built_in">input</span>.shape[<span class="number">1</span>], height, width])</span><br><span class="line">        self.input_pad[:, :, self.padding:self.padding+self.<span class="built_in">input</span>.shape[<span class="number">2</span>], self.padding:self.padding+self.<span class="built_in">input</span>.shape[<span class="number">3</span>]] = self.<span class="built_in">input</span></span><br><span class="line">        height_out = <span class="built_in">int</span>((height - self.kernel_size) / self.stride + <span class="number">1</span>)</span><br><span class="line">        width_out = <span class="built_in">int</span>((width - self.kernel_size) / self.stride + <span class="number">1</span>)</span><br><span class="line">        self.output = np.zeros([self.<span class="built_in">input</span>.shape[<span class="number">0</span>], self.channel_out, height_out, width_out])</span><br><span class="line">        <span class="keyword">for</span> idxn <span class="keyword">in</span> <span class="built_in">range</span>(self.<span class="built_in">input</span>.shape[<span class="number">0</span>]):</span><br><span class="line">            <span class="keyword">for</span> idxc <span class="keyword">in</span> <span class="built_in">range</span>(self.channel_out):</span><br><span class="line">                <span class="keyword">for</span> idxh <span class="keyword">in</span> <span class="built_in">range</span>(height_out):</span><br><span class="line">                    <span class="keyword">for</span> idxw <span class="keyword">in</span> <span class="built_in">range</span>(width_out):</span><br><span class="line">                        h = idxh * self.stride</span><br><span class="line">                        w = idxw * self.stride</span><br><span class="line">                        self.output[idxn, idxc, idxh, idxw] = np.<span class="built_in">sum</span>(self.weight[:, :, :, idxc] * self.input_pad[idxn, :, h:h + self.kernel_size, w:w + self.kernel_size]) + self.bias[idxc]</span><br><span class="line">        <span class="keyword">return</span> self.output</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">load_param</span>(<span class="params">self, weight, bias</span>):</span><br><span class="line">        self.weight = weight</span><br><span class="line">        self.bias = bias</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">MaxPoolingLayer</span>(<span class="title class_ inherited__">object</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, kernel_size, stride</span>):</span><br><span class="line">        self.kernel_size = kernel_size</span><br><span class="line">        self.stride = stride</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, _<span class="built_in">input</span></span>):</span><br><span class="line">        <span class="keyword">return</span> self.forward_fast(_<span class="built_in">input</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward_fast</span>(<span class="params">self, _<span class="built_in">input</span></span>):</span><br><span class="line">        self.<span class="built_in">input</span> = _<span class="built_in">input</span></span><br><span class="line">        self.max_index = np.zeros(self.<span class="built_in">input</span>.shape)</span><br><span class="line">        height_out = <span class="built_in">int</span>((self.<span class="built_in">input</span>.shape[<span class="number">2</span>] - self.kernel_size) / self.stride + <span class="number">1</span>)</span><br><span class="line">        width_out = <span class="built_in">int</span>((self.<span class="built_in">input</span>.shape[<span class="number">3</span>] - self.kernel_size) / self.stride + <span class="number">1</span>)</span><br><span class="line">        self.input_vectorized = np.zeros([self.<span class="built_in">input</span>.shape[<span class="number">0</span>], self.<span class="built_in">input</span>.shape[<span class="number">1</span>],</span><br><span class="line">                                          height_out * width_out, self.kernel_size * self.kernel_size])</span><br><span class="line">        <span class="keyword">for</span> idxh <span class="keyword">in</span> <span class="built_in">range</span>(height_out):</span><br><span class="line">            <span class="keyword">for</span> idxw <span class="keyword">in</span> <span class="built_in">range</span>(width_out):</span><br><span class="line">                roi = self.<span class="built_in">input</span>[:, :,</span><br><span class="line">                      idxh * self.stride:idxh * self.stride + self.kernel_size,</span><br><span class="line">                      idxw * self.stride:idxw * self.stride + self.kernel_size]</span><br><span class="line">                self.input_vectorized[:, :, idxh * width_out + idxw] = roi.reshape([roi.shape[<span class="number">0</span>], roi.shape[<span class="number">1</span>], -<span class="number">1</span>])</span><br><span class="line">        self.output = np.<span class="built_in">max</span>(self.input_vectorized, axis=-<span class="number">1</span>).reshape([self.<span class="built_in">input</span>.shape[<span class="number">0</span>], self.<span class="built_in">input</span>.shape[<span class="number">1</span>], height_out, width_out])</span><br><span class="line">        <span class="keyword">return</span> self.output</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward_slow</span>(<span class="params">self, _<span class="built_in">input</span></span>):</span><br><span class="line">        self.<span class="built_in">input</span> = _<span class="built_in">input</span></span><br><span class="line">        self.max_index = np.zeros(self.<span class="built_in">input</span>.shape)</span><br><span class="line">        height_out = <span class="built_in">int</span>((self.<span class="built_in">input</span>.shape[<span class="number">2</span>] - self.kernel_size) / self.stride + <span class="number">1</span>)</span><br><span class="line">        width_out = <span class="built_in">int</span>((self.<span class="built_in">input</span>.shape[<span class="number">3</span>] - self.kernel_size) / self.stride + <span class="number">1</span>)</span><br><span class="line">        self.output = np.zeros([self.<span class="built_in">input</span>.shape[<span class="number">0</span>], self.<span class="built_in">input</span>.shape[<span class="number">1</span>], height_out, width_out])</span><br><span class="line">        <span class="keyword">for</span> idxn <span class="keyword">in</span> <span class="built_in">range</span>(self.<span class="built_in">input</span>.shape[<span class="number">0</span>]):</span><br><span class="line">            <span class="keyword">for</span> idxc <span class="keyword">in</span> <span class="built_in">range</span>(self.<span class="built_in">input</span>.shape[<span class="number">1</span>]):</span><br><span class="line">                <span class="keyword">for</span> idxh <span class="keyword">in</span> <span class="built_in">range</span>(height_out):</span><br><span class="line">                    <span class="keyword">for</span> idxw <span class="keyword">in</span> <span class="built_in">range</span>(width_out):</span><br><span class="line">                        h = idxh * self.stride</span><br><span class="line">                        w = idxw * self.stride</span><br><span class="line">                        self.output[idxn, idxc, idxh, idxw] = np.<span class="built_in">max</span>(self.<span class="built_in">input</span>[idxn, idxc, h:h + self.kernel_size, w:w + self.kernel_size])</span><br><span class="line">        <span class="keyword">return</span> self.output</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">FlattenLayer</span>(<span class="title class_ inherited__">object</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, input_shape, output_shape</span>):</span><br><span class="line">        self.input_shape = input_shape</span><br><span class="line">        self.output_shape = output_shape</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, _<span class="built_in">input</span></span>):</span><br><span class="line">        self.<span class="built_in">input</span> = np.transpose(_<span class="built_in">input</span>, [<span class="number">0</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">1</span>])</span><br><span class="line">        self.output = self.<span class="built_in">input</span>.reshape([self.<span class="built_in">input</span>.shape[<span class="number">0</span>]] + <span class="built_in">list</span>(self.output_shape))</span><br><span class="line">        <span class="keyword">return</span>  self.output</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">FullyConnectedLayer</span>(<span class="title class_ inherited__">object</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, num_input, num_output</span>):</span><br><span class="line">        self.num_input = num_input</span><br><span class="line">        self.num_output = num_output</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">init_param</span>(<span class="params">self, std=<span class="number">0.01</span></span>):</span><br><span class="line">        self.weight = np.random.normal(loc=<span class="number">0.0</span>, scale=std, size=(self.num_input, self.num_output))</span><br><span class="line">        self.bias = np.zeros([<span class="number">1</span>, self.num_output])</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, _<span class="built_in">input</span></span>):</span><br><span class="line">        self.<span class="built_in">input</span> = _<span class="built_in">input</span></span><br><span class="line">        output = np.dot(_<span class="built_in">input</span>, self.weight) + self.bias</span><br><span class="line">        <span class="keyword">return</span> output</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">backward</span>(<span class="params">self, top_diff</span>):</span><br><span class="line">        self.d_weight = np.dot(self.<span class="built_in">input</span>.T, top_diff)</span><br><span class="line">        self.d_bias = np.<span class="built_in">sum</span>(top_diff, axis=<span class="number">0</span>)</span><br><span class="line">        bottom_diff = np.dot(top_diff, self.weight.T)</span><br><span class="line">        <span class="keyword">return</span> bottom_diff</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">update_param</span>(<span class="params">self, lr</span>):</span><br><span class="line">        self.weight = self.weight - lr * self.d_weight</span><br><span class="line">        self.bias = self.bias - lr * self.d_bias</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">load_param</span>(<span class="params">self, weight, bias</span>):</span><br><span class="line">        <span class="keyword">assert</span> self.weight.shape == weight.shape</span><br><span class="line">        <span class="keyword">assert</span> self.bias.shape == bias.shape</span><br><span class="line">        self.weight = weight</span><br><span class="line">        self.bias = bias</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">save_param</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> self.weight, self.bias</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">ReLULayer</span>(<span class="title class_ inherited__">object</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, _<span class="built_in">input</span></span>):</span><br><span class="line">        self.<span class="built_in">input</span> = _<span class="built_in">input</span></span><br><span class="line">        output = np.maximum(self.<span class="built_in">input</span>, <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">return</span> output</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">backward</span>(<span class="params">self, top_diff</span>):</span><br><span class="line">        bottom_diff = top_diff</span><br><span class="line">        bottom_diff[self.<span class="built_in">input</span> &lt; <span class="number">0</span>] = <span class="number">0</span></span><br><span class="line">        <span class="keyword">return</span> bottom_diff</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SoftmaxLossLayer</span>(<span class="title class_ inherited__">object</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, _<span class="built_in">input</span></span>):</span><br><span class="line">        input_max = np.<span class="built_in">max</span>(_<span class="built_in">input</span>, axis=<span class="number">1</span>, keepdims=<span class="literal">True</span>)</span><br><span class="line">        input_exp = np.exp(_<span class="built_in">input</span> - input_max)</span><br><span class="line">        self.prob = input_exp / np.<span class="built_in">sum</span>(input_exp, axis=<span class="number">1</span>, keepdims=<span class="literal">True</span>)</span><br><span class="line">        <span class="keyword">return</span> self.prob</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">get_loss</span>(<span class="params">self, label</span>):</span><br><span class="line">        self.batch_size = self.prob.shape[<span class="number">0</span>]</span><br><span class="line">        self.label_onehot = np.zeros_like(self.prob)</span><br><span class="line">        self.label_onehot[np.arange(self.batch_size), label] = <span class="number">1.0</span></span><br><span class="line">        loss = -np.<span class="built_in">sum</span>(np.log(self.prob)*self.label_onehot) / self.batch_size</span><br><span class="line">        <span class="keyword">return</span> loss</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">backward</span>(<span class="params">self</span>):</span><br><span class="line">        bottom_diff = (self.prob - self.label_onehot) / self.batch_size</span><br><span class="line">        <span class="keyword">return</span> bottom_diff</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">VGG19</span>(<span class="title class_ inherited__">object</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, param_path=<span class="string">&#x27;imagenet-vgg-verydeep-19.mat&#x27;</span></span>):</span><br><span class="line">        self.param_path = param_path</span><br><span class="line">        self.param_layer_name = (</span><br><span class="line">            <span class="string">&#x27;conv1_1&#x27;</span>, <span class="string">&#x27;relu1_1&#x27;</span>, <span class="string">&#x27;conv1_2&#x27;</span>, <span class="string">&#x27;relu1_2&#x27;</span>, <span class="string">&#x27;pool1&#x27;</span>,</span><br><span class="line">            <span class="string">&#x27;conv2_1&#x27;</span>, <span class="string">&#x27;relu2_1&#x27;</span>, <span class="string">&#x27;conv2_2&#x27;</span>, <span class="string">&#x27;relu2_2&#x27;</span>, <span class="string">&#x27;pool2&#x27;</span>,</span><br><span class="line">            <span class="string">&#x27;conv3_1&#x27;</span>, <span class="string">&#x27;relu3_1&#x27;</span>, <span class="string">&#x27;conv3_2&#x27;</span>, <span class="string">&#x27;relu3_2&#x27;</span>, <span class="string">&#x27;conv3_3&#x27;</span>, <span class="string">&#x27;relu3_3&#x27;</span>, <span class="string">&#x27;conv3_4&#x27;</span>, <span class="string">&#x27;relu3_4&#x27;</span>, <span class="string">&#x27;pool3&#x27;</span>,</span><br><span class="line">            <span class="string">&#x27;conv4_1&#x27;</span>, <span class="string">&#x27;relu4_1&#x27;</span>, <span class="string">&#x27;conv4_2&#x27;</span>, <span class="string">&#x27;relu4_2&#x27;</span>, <span class="string">&#x27;conv4_3&#x27;</span>, <span class="string">&#x27;relu4_3&#x27;</span>, <span class="string">&#x27;conv4_4&#x27;</span>, <span class="string">&#x27;relu4_4&#x27;</span>, <span class="string">&#x27;pool4&#x27;</span>,</span><br><span class="line">            <span class="string">&#x27;conv5_1&#x27;</span>, <span class="string">&#x27;relu5_1&#x27;</span>, <span class="string">&#x27;conv5_2&#x27;</span>, <span class="string">&#x27;relu5_2&#x27;</span>, <span class="string">&#x27;conv5_3&#x27;</span>, <span class="string">&#x27;relu5_3&#x27;</span>, <span class="string">&#x27;conv5_4&#x27;</span>, <span class="string">&#x27;relu5_4&#x27;</span>, <span class="string">&#x27;pool5&#x27;</span>,</span><br><span class="line">            <span class="string">&#x27;flatten&#x27;</span>, <span class="string">&#x27;fc6&#x27;</span>, <span class="string">&#x27;relu6&#x27;</span>, <span class="string">&#x27;fc7&#x27;</span>, <span class="string">&#x27;relu7&#x27;</span>, <span class="string">&#x27;fc8&#x27;</span>, <span class="string">&#x27;softmax&#x27;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">build_model</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&#x27;Building model&#x27;</span>)</span><br><span class="line">        self.layers = &#123;&#125;</span><br><span class="line">        self.layers[<span class="string">&#x27;conv1_1&#x27;</span>] = ConvolutionalLayer(<span class="number">3</span>, <span class="number">3</span>, <span class="number">64</span>, <span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">        self.layers[<span class="string">&#x27;relu1_1&#x27;</span>] = ReLULayer()</span><br><span class="line">        self.layers[<span class="string">&#x27;conv1_2&#x27;</span>] = ConvolutionalLayer(<span class="number">3</span>, <span class="number">64</span>, <span class="number">64</span>, <span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">        self.layers[<span class="string">&#x27;relu1_2&#x27;</span>] = ReLULayer()</span><br><span class="line">        self.layers[<span class="string">&#x27;pool1&#x27;</span>] = MaxPoolingLayer(<span class="number">2</span>, <span class="number">2</span>)</span><br><span class="line"></span><br><span class="line">        self.layers[<span class="string">&#x27;conv2_1&#x27;</span>] = ConvolutionalLayer(<span class="number">3</span>, <span class="number">64</span>, <span class="number">128</span>, <span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">        self.layers[<span class="string">&#x27;relu2_1&#x27;</span>] = ReLULayer()</span><br><span class="line">        self.layers[<span class="string">&#x27;conv2_2&#x27;</span>] = ConvolutionalLayer(<span class="number">3</span>, <span class="number">128</span>, <span class="number">128</span>, <span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">        self.layers[<span class="string">&#x27;relu2_2&#x27;</span>] = ReLULayer()</span><br><span class="line">        self.layers[<span class="string">&#x27;pool2&#x27;</span>] = MaxPoolingLayer(<span class="number">2</span>, <span class="number">2</span>)</span><br><span class="line"></span><br><span class="line">        self.layers[<span class="string">&#x27;conv3_1&#x27;</span>] = ConvolutionalLayer(<span class="number">3</span>, <span class="number">128</span>, <span class="number">256</span>, <span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">        self.layers[<span class="string">&#x27;relu3_1&#x27;</span>] = ReLULayer()</span><br><span class="line">        self.layers[<span class="string">&#x27;conv3_2&#x27;</span>] = ConvolutionalLayer(<span class="number">3</span>, <span class="number">256</span>, <span class="number">256</span>, <span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">        self.layers[<span class="string">&#x27;relu3_2&#x27;</span>] = ReLULayer()</span><br><span class="line">        self.layers[<span class="string">&#x27;conv3_3&#x27;</span>] = ConvolutionalLayer(<span class="number">3</span>, <span class="number">256</span>, <span class="number">256</span>, <span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">        self.layers[<span class="string">&#x27;relu3_3&#x27;</span>] = ReLULayer()</span><br><span class="line">        self.layers[<span class="string">&#x27;conv3_4&#x27;</span>] = ConvolutionalLayer(<span class="number">3</span>, <span class="number">256</span>, <span class="number">256</span>, <span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">        self.layers[<span class="string">&#x27;relu3_4&#x27;</span>] = ReLULayer()</span><br><span class="line">        self.layers[<span class="string">&#x27;pool3&#x27;</span>] = MaxPoolingLayer(<span class="number">2</span>, <span class="number">2</span>)</span><br><span class="line"></span><br><span class="line">        self.layers[<span class="string">&#x27;conv4_1&#x27;</span>] = ConvolutionalLayer(<span class="number">3</span>, <span class="number">256</span>, <span class="number">512</span>, <span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">        self.layers[<span class="string">&#x27;relu4_1&#x27;</span>] = ReLULayer()</span><br><span class="line">        self.layers[<span class="string">&#x27;conv4_2&#x27;</span>] = ConvolutionalLayer(<span class="number">3</span>, <span class="number">512</span>, <span class="number">512</span>, <span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">        self.layers[<span class="string">&#x27;relu4_2&#x27;</span>] = ReLULayer()</span><br><span class="line">        self.layers[<span class="string">&#x27;conv4_3&#x27;</span>] = ConvolutionalLayer(<span class="number">3</span>, <span class="number">512</span>, <span class="number">512</span>, <span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">        self.layers[<span class="string">&#x27;relu4_3&#x27;</span>] = ReLULayer()</span><br><span class="line">        self.layers[<span class="string">&#x27;conv4_4&#x27;</span>] = ConvolutionalLayer(<span class="number">3</span>, <span class="number">512</span>, <span class="number">512</span>, <span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">        self.layers[<span class="string">&#x27;relu4_4&#x27;</span>] = ReLULayer()</span><br><span class="line">        self.layers[<span class="string">&#x27;pool4&#x27;</span>] = MaxPoolingLayer(<span class="number">2</span>, <span class="number">2</span>)</span><br><span class="line"></span><br><span class="line">        self.layers[<span class="string">&#x27;conv5_1&#x27;</span>] = ConvolutionalLayer(<span class="number">3</span>, <span class="number">512</span>, <span class="number">512</span>, <span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">        self.layers[<span class="string">&#x27;relu5_1&#x27;</span>] = ReLULayer()</span><br><span class="line">        self.layers[<span class="string">&#x27;conv5_2&#x27;</span>] = ConvolutionalLayer(<span class="number">3</span>, <span class="number">512</span>, <span class="number">512</span>, <span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">        self.layers[<span class="string">&#x27;relu5_2&#x27;</span>] = ReLULayer()</span><br><span class="line">        self.layers[<span class="string">&#x27;conv5_3&#x27;</span>] = ConvolutionalLayer(<span class="number">3</span>, <span class="number">512</span>, <span class="number">512</span>, <span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">        self.layers[<span class="string">&#x27;relu5_3&#x27;</span>] = ReLULayer()</span><br><span class="line">        self.layers[<span class="string">&#x27;conv5_4&#x27;</span>] = ConvolutionalLayer(<span class="number">3</span>, <span class="number">512</span>, <span class="number">512</span>, <span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">        self.layers[<span class="string">&#x27;relu5_4&#x27;</span>] = ReLULayer()</span><br><span class="line">        self.layers[<span class="string">&#x27;pool5&#x27;</span>] = MaxPoolingLayer(<span class="number">2</span>, <span class="number">2</span>)</span><br><span class="line"></span><br><span class="line">        self.layers[<span class="string">&#x27;flatten&#x27;</span>] = FlattenLayer([<span class="number">512</span>, <span class="number">7</span>, <span class="number">7</span>], [<span class="number">512</span>*<span class="number">7</span>*<span class="number">7</span>])</span><br><span class="line">        self.layers[<span class="string">&#x27;fc6&#x27;</span>] = FullyConnectedLayer(<span class="number">512</span>*<span class="number">7</span>*<span class="number">7</span>, <span class="number">4096</span>)</span><br><span class="line">        self.layers[<span class="string">&#x27;relu6&#x27;</span>] = ReLULayer()</span><br><span class="line">        self.layers[<span class="string">&#x27;fc7&#x27;</span>] = FullyConnectedLayer(<span class="number">4096</span>, <span class="number">4096</span>)</span><br><span class="line">        self.layers[<span class="string">&#x27;relu7&#x27;</span>] = ReLULayer()</span><br><span class="line">        self.layers[<span class="string">&#x27;fc8&#x27;</span>] = FullyConnectedLayer(<span class="number">4096</span>, <span class="number">1000</span>)</span><br><span class="line">        self.layers[<span class="string">&#x27;softmax&#x27;</span>] = SoftmaxLossLayer()</span><br><span class="line"></span><br><span class="line">        self.update_layer_list = []</span><br><span class="line">        <span class="keyword">for</span> layer_name <span class="keyword">in</span> self.layers.keys():</span><br><span class="line">            <span class="keyword">if</span> <span class="string">&#x27;conv&#x27;</span> <span class="keyword">in</span> layer_name <span class="keyword">or</span> <span class="string">&#x27;fc&#x27;</span> <span class="keyword">in</span> layer_name:</span><br><span class="line">                self.update_layer_list.append(layer_name)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">init_model</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&#x27;Initing model&#x27;</span>)</span><br><span class="line">        <span class="keyword">for</span> layer_name <span class="keyword">in</span> self.update_layer_list:</span><br><span class="line">            self.layers[layer_name].init_param()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">load_model</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&#x27;Loading model&#x27;</span>)</span><br><span class="line">        params = sio.loadmat(self.param_path)</span><br><span class="line">        self.image_mean = params[<span class="string">&#x27;normalization&#x27;</span>][<span class="number">0</span>][<span class="number">0</span>][<span class="number">0</span>]</span><br><span class="line">        self.image_mean = np.mean(self.image_mean, axis=(<span class="number">0</span>, <span class="number">1</span>))</span><br><span class="line">        <span class="keyword">for</span> idx <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">43</span>):</span><br><span class="line">            <span class="keyword">if</span> <span class="string">&#x27;conv&#x27;</span> <span class="keyword">in</span> self.param_layer_name[idx]:</span><br><span class="line">                weight, bias = params[<span class="string">&#x27;layers&#x27;</span>][<span class="number">0</span>][idx][<span class="number">0</span>][<span class="number">0</span>][<span class="number">0</span>][<span class="number">0</span>]</span><br><span class="line">                weight = np.transpose(weight, [<span class="number">2</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="number">3</span>])</span><br><span class="line">                bias = bias.reshape(-<span class="number">1</span>)</span><br><span class="line">                self.layers[self.param_layer_name[idx]].load_param(weight, bias)</span><br><span class="line">            <span class="keyword">if</span> idx &gt;= <span class="number">37</span> <span class="keyword">and</span> <span class="string">&#x27;fc&#x27;</span> <span class="keyword">in</span> self.param_layer_name[idx]:</span><br><span class="line">                weight, bias = params[<span class="string">&#x27;layers&#x27;</span>][<span class="number">0</span>][idx-<span class="number">1</span>][<span class="number">0</span>][<span class="number">0</span>][<span class="number">0</span>][<span class="number">0</span>]</span><br><span class="line">                weight = weight.reshape([weight.shape[<span class="number">0</span>]*weight.shape[<span class="number">1</span>]*weight.shape[<span class="number">2</span>], weight.shape[<span class="number">3</span>]])</span><br><span class="line">                self.layers[self.param_layer_name[idx]].load_param(weight, bias)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self</span>):</span><br><span class="line">        current = self.input_image</span><br><span class="line">        <span class="keyword">for</span> idx <span class="keyword">in</span> <span class="built_in">range</span>(<span class="built_in">len</span>(self.param_layer_name)):</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&#x27;Forwarding in layer: %s&#x27;</span> % self.param_layer_name[idx], end=<span class="string">&quot;&quot;</span>)</span><br><span class="line">            start_time = time.time()</span><br><span class="line">            current = self.layers[self.param_layer_name[idx]].forward(current)</span><br><span class="line">            end_time = time.time()</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&#x27; time:%.2fs&#x27;</span> % (end_time-start_time))</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> current</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">evaluate</span>(<span class="params">self</span>):</span><br><span class="line">        prob = self.forward()</span><br><span class="line">        top1 = np.argmax(prob[<span class="number">0</span>])</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&#x27;Classification result: id=%d, prob=%f&#x27;</span> % (top1, prob[<span class="number">0</span>, top1]))</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">load_image</span>(<span class="params">self, image_dir</span>):</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&#x27;Loading and preprocessing image from &#x27;</span> + image_dir)</span><br><span class="line">        self.input_image = Image.<span class="built_in">open</span>(image_dir).resize((<span class="number">224</span>, <span class="number">224</span>))</span><br><span class="line">        self.input_image = np.array(self.input_image).astype(np.float32)</span><br><span class="line">        self.input_image -= self.image_mean</span><br><span class="line">        self.input_image = np.reshape(self.input_image, [<span class="number">1</span>]+<span class="built_in">list</span>(self.input_image.shape))</span><br><span class="line">        self.input_image = np.transpose(self.input_image, [<span class="number">0</span>, <span class="number">3</span>, <span class="number">1</span>, <span class="number">2</span>])</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    vgg = VGG19()</span><br><span class="line">    vgg.build_model()</span><br><span class="line">    vgg.init_model()</span><br><span class="line">    vgg.load_model()</span><br><span class="line">    vgg.load_image(<span class="string">&#x27;c67ab7b456b55a4cba9f6e2956b7c2ef.jpeg&#x27;</span>)</span><br><span class="line">    vgg.evaluate()</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/ai/" rel="tag"># ai</a>
+              <a href="/tags/%E6%99%BA%E8%83%BD%E8%AE%A1%E7%AE%97%E7%B3%BB%E7%BB%9F/" rel="tag"># 智能计算系统</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/04/14/%E6%99%BA%E8%83%BD%E8%AE%A1%E7%AE%97%E7%B3%BB%E7%BB%9F_lab(1)/" rel="prev" title="智能计算系统 lab2.1">
+      <i class="fa fa-chevron-left"></i> 智能计算系统 lab2.1
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/10/11/ffmpeg+rtsp-simple-server%E6%8E%A8%E6%B5%81/" rel="next" title="ffmpeg+rtsp-simple-server推流">
+      ffmpeg+rtsp-simple-server推流 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C%E7%9B%AE%E7%9A%84"><span class="nav-number">1.</span> <span class="nav-text">实验目的</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C%E5%86%85%E5%AE%B9"><span class="nav-number">2.</span> <span class="nav-text">实验内容</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ConvolutionalLayer"><span class="nav-number">2.1.</span> <span class="nav-text">ConvolutionalLayer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MaxPoolingLayer"><span class="nav-number">2.2.</span> <span class="nav-text">MaxPoolingLayer</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B4%E4%BD%93%E4%BB%A3%E7%A0%81"><span class="nav-number">3.</span> <span class="nav-text">整体代码</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">wyl</p>
+  <div class="site-description" itemprop="description">Just HelloWorld</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">wyl</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : '0jwaU0bESSetUEpTsOd219tx-gzGzoHsz',
+      appKey     : 'z8S7DcyrCBA9xTDpmQ03i0FC',
+      placeholder: "emmmm",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : true,
+      lang       : 'zh-cn' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

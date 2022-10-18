@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.1.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"orangec.xyz","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="这一系列文章是在学习智能计算系统，完成lab过程中的一些notes。  课程link：https:&#x2F;&#x2F;space.bilibili.com&#x2F;494117284 实验link：https:&#x2F;&#x2F;forum.cambricon.com&#x2F;show-6-1529-1.html 实验中参考了一些网络上关于这个实验的笔记">
+<meta property="og:type" content="article">
+<meta property="og:title" content="智能计算系统 lab2.1">
+<meta property="og:url" content="https://orangec.xyz/2022/04/14/%E6%99%BA%E8%83%BD%E8%AE%A1%E7%AE%97%E7%B3%BB%E7%BB%9F_lab(1)/index.html">
+<meta property="og:site_name" content="Hello World">
+<meta property="og:description" content="这一系列文章是在学习智能计算系统，完成lab过程中的一些notes。  课程link：https:&#x2F;&#x2F;space.bilibili.com&#x2F;494117284 实验link：https:&#x2F;&#x2F;forum.cambricon.com&#x2F;show-6-1529-1.html 实验中参考了一些网络上关于这个实验的笔记">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-04-14T15:53:00.000Z">
+<meta property="article:modified_time" content="2022-04-15T11:09:00.000Z">
+<meta property="article:author" content="wyl">
+<meta property="article:tag" content="ai">
+<meta property="article:tag" content="智能计算系统">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://orangec.xyz/2022/04/14/%E6%99%BA%E8%83%BD%E8%AE%A1%E7%AE%97%E7%B3%BB%E7%BB%9F_lab(1)/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>智能计算系统 lab2.1 | Hello World</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hello World</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://orangec.xyz/2022/04/14/%E6%99%BA%E8%83%BD%E8%AE%A1%E7%AE%97%E7%B3%BB%E7%BB%9F_lab(1)/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="wyl">
+      <meta itemprop="description" content="Just HelloWorld">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hello World">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          智能计算系统 lab2.1
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-04-14 23:53:00" itemprop="dateCreated datePublished" datetime="2022-04-14T23:53:00+08:00">2022-04-14</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-04-15 19:09:00" itemprop="dateModified" datetime="2022-04-15T19:09:00+08:00">2022-04-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ai/" itemprop="url" rel="index"><span itemprop="name">ai</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2022/04/14/%E6%99%BA%E8%83%BD%E8%AE%A1%E7%AE%97%E7%B3%BB%E7%BB%9F_lab(1)/" class="post-meta-item leancloud_visitors" data-flag-title="智能计算系统 lab2.1" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/04/14/%E6%99%BA%E8%83%BD%E8%AE%A1%E7%AE%97%E7%B3%BB%E7%BB%9F_lab(1)/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/04/14/%E6%99%BA%E8%83%BD%E8%AE%A1%E7%AE%97%E7%B3%BB%E7%BB%9F_lab(1)/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>这一系列文章是在学习智能计算系统，完成lab过程中的一些notes。</p>
+<ul>
+<li>课程link：<a target="_blank" rel="noopener" href="https://space.bilibili.com/494117284">https://space.bilibili.com/494117284</a></li>
+<li>实验link：<a target="_blank" rel="noopener" href="https://forum.cambricon.com/show-6-1529-1.html">https://forum.cambricon.com/show-6-1529-1.html</a></li>
+<li>实验中参考了一些网络上关于这个实验的笔记<span id="more"></span></li>
+</ul>
+<p>Requirements：</p>
+<ul>
+<li>Python 3.10</li>
+<li>numpy 1.21.5</li>
+<li>MNIST</li>
+</ul>
+<p>源码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># coding=utf-8</span></span><br><span class="line"><span class="comment"># wyl 2022.4.14</span></span><br><span class="line"><span class="keyword">import</span> os.path</span><br><span class="line"><span class="keyword">import</span> struct</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">MNIST_DIR = <span class="string">&#x27;mnist&#x27;</span></span><br><span class="line">TRAIN_DATA = <span class="string">&#x27;train-images.idx3-ubyte&#x27;</span></span><br><span class="line">TRAIN_LABELS = <span class="string">&#x27;train-labels.idx1-ubyte&#x27;</span></span><br><span class="line">TEST_DATA = <span class="string">&#x27;t10k-images.idx3-ubyte&#x27;</span></span><br><span class="line">TEST_LABELS = <span class="string">&#x27;t10k-labels.idx1-ubyte&#x27;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">FullyConnectedLayer</span>(<span class="title class_ inherited__">object</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, num_input, num_output</span>):</span><br><span class="line">        self.num_input = num_input</span><br><span class="line">        self.num_output = num_output</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">init_param</span>(<span class="params">self, std=<span class="number">0.01</span></span>):</span><br><span class="line">        self.weight = np.random.normal(loc=<span class="number">0.0</span>, scale=std, size=(self.num_input, self.num_output))</span><br><span class="line">        self.bias = np.zeros([<span class="number">1</span>, self.num_output])</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, _<span class="built_in">input</span></span>):</span><br><span class="line">        self.<span class="built_in">input</span> = _<span class="built_in">input</span></span><br><span class="line">        output = np.dot(_<span class="built_in">input</span>, self.weight) + self.bias</span><br><span class="line">        <span class="keyword">return</span> output</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">backward</span>(<span class="params">self, top_diff</span>):</span><br><span class="line">        self.d_weight = np.dot(self.<span class="built_in">input</span>.T, top_diff)</span><br><span class="line">        self.d_bias = np.<span class="built_in">sum</span>(top_diff, axis=<span class="number">0</span>)</span><br><span class="line">        bottom_diff = np.dot(top_diff, self.weight.T)</span><br><span class="line">        <span class="keyword">return</span> bottom_diff</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">update_param</span>(<span class="params">self, lr</span>):</span><br><span class="line">        self.weight = self.weight - lr * self.d_weight</span><br><span class="line">        self.bias = self.bias - lr * self.d_bias</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">load_param</span>(<span class="params">self, weight, bias</span>):</span><br><span class="line">        <span class="keyword">assert</span> self.weight.shape == weight.shape</span><br><span class="line">        <span class="keyword">assert</span> self.bias.shape == bias.shape</span><br><span class="line">        self.weight = weight</span><br><span class="line">        self.bias = bias</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">save_param</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> self.weight, self.bias</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">ReLULayer</span>(<span class="title class_ inherited__">object</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, _<span class="built_in">input</span></span>):</span><br><span class="line">        self.<span class="built_in">input</span> = _<span class="built_in">input</span></span><br><span class="line">        output = np.maximum(self.<span class="built_in">input</span>, <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">return</span> output</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">backward</span>(<span class="params">self, top_diff</span>):</span><br><span class="line">        bottom_diff = top_diff</span><br><span class="line">        bottom_diff[self.<span class="built_in">input</span> &lt; <span class="number">0</span>] = <span class="number">0</span></span><br><span class="line">        <span class="keyword">return</span> bottom_diff</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SoftmaxLossLayer</span>(<span class="title class_ inherited__">object</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, _<span class="built_in">input</span></span>):</span><br><span class="line">        input_max = np.<span class="built_in">max</span>(_<span class="built_in">input</span>, axis=<span class="number">1</span>, keepdims=<span class="literal">True</span>)</span><br><span class="line">        input_exp = np.exp(_<span class="built_in">input</span> - input_max)</span><br><span class="line">        self.prob = input_exp / np.<span class="built_in">sum</span>(input_exp, axis=<span class="number">1</span>, keepdims=<span class="literal">True</span>)</span><br><span class="line">        <span class="keyword">return</span> self.prob</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">get_loss</span>(<span class="params">self, label</span>):</span><br><span class="line">        self.batch_size = self.prob.shape[<span class="number">0</span>]</span><br><span class="line">        self.label_onehot = np.zeros_like(self.prob)</span><br><span class="line">        self.label_onehot[np.arange(self.batch_size), label] = <span class="number">1.0</span></span><br><span class="line">        loss = -np.<span class="built_in">sum</span>(np.log(self.prob)*self.label_onehot) / self.batch_size</span><br><span class="line">        <span class="keyword">return</span> loss</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">backward</span>(<span class="params">self</span>):</span><br><span class="line">        bottom_diff = (self.prob - self.label_onehot) / self.batch_size</span><br><span class="line">        <span class="keyword">return</span> bottom_diff</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">MNIST_MLP</span>(<span class="title class_ inherited__">object</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, batch_size=<span class="number">100</span>, input_size=<span class="number">784</span>, hidden1=<span class="number">32</span>, hidden2=<span class="number">16</span>, out_classes=<span class="number">10</span>, lr=<span class="number">0.01</span>, max_epoch=<span class="number">2</span>, print_iter=<span class="number">100</span></span>):</span><br><span class="line">        self.batch_size = batch_size</span><br><span class="line">        self.input_size = input_size</span><br><span class="line">        self.hidden1 = hidden1</span><br><span class="line">        self.hidden2 = hidden2</span><br><span class="line">        self.out_classes = out_classes</span><br><span class="line">        self.lr = lr</span><br><span class="line">        self.max_epoch = max_epoch</span><br><span class="line">        self.print_iter = print_iter</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">build_model</span>(<span class="params">self</span>):</span><br><span class="line">        self.fc1 = FullyConnectedLayer(self.input_size, self.hidden1)</span><br><span class="line">        self.relu1 = ReLULayer()</span><br><span class="line">        self.fc2 = FullyConnectedLayer(self.hidden1, self.hidden2)</span><br><span class="line">        self.relu2 = ReLULayer()</span><br><span class="line">        self.fc3 = FullyConnectedLayer(self.hidden2, self.out_classes)</span><br><span class="line">        self.softmax = SoftmaxLossLayer()</span><br><span class="line">        self.update_layer_list = [self.fc1, self.fc2, self.fc3]</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">init_model</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">for</span> layer <span class="keyword">in</span> self.update_layer_list:</span><br><span class="line">            layer.init_param()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, _<span class="built_in">input</span></span>):</span><br><span class="line">        h1 = self.fc1.forward(_<span class="built_in">input</span>)</span><br><span class="line">        h1 = self.relu1.forward(h1)</span><br><span class="line">        h2 = self.fc2.forward(h1)</span><br><span class="line">        h2 = self.relu2.forward(h2)</span><br><span class="line">        h3 = self.fc3.forward(h2)</span><br><span class="line">        prob = self.softmax.forward(h3)</span><br><span class="line">        <span class="keyword">return</span> prob</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">backward</span>(<span class="params">self</span>):</span><br><span class="line">        dloss = self.softmax.backward()</span><br><span class="line">        dh2 = self.fc3.backward(dloss)</span><br><span class="line">        dh2 = self.relu2.backward(dh2)</span><br><span class="line">        dh1 = self.fc2.backward(dh2)</span><br><span class="line">        dh1 = self.relu1.backward(dh1)</span><br><span class="line">        dh1 = self.fc1.backward(dh1)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">update</span>(<span class="params">self, lr</span>):</span><br><span class="line">        <span class="keyword">for</span> layer <span class="keyword">in</span> self.update_layer_list:</span><br><span class="line">            layer.update_param(lr)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">save_model</span>(<span class="params">self, param_dir</span>):</span><br><span class="line">        params = &#123;&#125;</span><br><span class="line">        params[<span class="string">&#x27;w1&#x27;</span>], params[<span class="string">&#x27;b1&#x27;</span>] = self.fc1.save_param()</span><br><span class="line">        params[<span class="string">&#x27;w2&#x27;</span>], params[<span class="string">&#x27;b2&#x27;</span>] = self.fc2.save_param()</span><br><span class="line">        params[<span class="string">&#x27;w3&#x27;</span>], params[<span class="string">&#x27;b3&#x27;</span>] = self.fc3.save_param()</span><br><span class="line">        np.save(param_dir, params)</span><br><span class="line"></span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">load_mnist</span>(<span class="params">file_dir, is_images=<span class="literal">True</span></span>):</span><br><span class="line">        bin_file = <span class="built_in">open</span>(file_dir, <span class="string">&#x27;rb&#x27;</span>)</span><br><span class="line">        bin_data = bin_file.read()</span><br><span class="line">        bin_file.close()</span><br><span class="line">        <span class="keyword">if</span> is_images:</span><br><span class="line">            fmt_header = <span class="string">&#x27;&gt;iiii&#x27;</span></span><br><span class="line">            magic, num_images, num_rows, num_cols = struct.unpack_from(fmt_header, bin_data, <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            fmt_header = <span class="string">&#x27;&gt;ii&#x27;</span></span><br><span class="line">            magic, num_images = struct.unpack_from(fmt_header, bin_data, <span class="number">0</span>)</span><br><span class="line">            num_rows, num_cols = <span class="number">1</span>, <span class="number">1</span></span><br><span class="line">        data_size = num_images * num_rows * num_cols</span><br><span class="line">        mat_data = struct.unpack_from(<span class="string">&#x27;&gt;&#x27;</span> + <span class="built_in">str</span>(data_size) + <span class="string">&#x27;B&#x27;</span>, bin_data, struct.calcsize(fmt_header))</span><br><span class="line">        mat_data = np.reshape(mat_data, [num_images, num_rows * num_cols])</span><br><span class="line">        <span class="keyword">return</span> mat_data</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">load_data</span>(<span class="params">self</span>):</span><br><span class="line">        train_images = self.load_mnist(os.path.join(MNIST_DIR, TRAIN_DATA))</span><br><span class="line">        train_labels = self.load_mnist(os.path.join(MNIST_DIR, TRAIN_LABELS), <span class="literal">False</span>)</span><br><span class="line">        test_images = self.load_mnist(os.path.join(MNIST_DIR, TEST_DATA))</span><br><span class="line">        test_labels = self.load_mnist(os.path.join(MNIST_DIR, TEST_LABELS), <span class="literal">False</span>)</span><br><span class="line">        self.train_data = np.append(train_images, train_labels, axis=<span class="number">1</span>)</span><br><span class="line">        self.test_data = np.append(test_images, test_labels, axis=<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">shuffle_data</span>(<span class="params">self</span>):</span><br><span class="line">        np.random.shuffle(self.train_data)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">train</span>(<span class="params">self</span>):</span><br><span class="line">        max_batch = <span class="built_in">int</span>(self.train_data.shape[<span class="number">0</span>] / self.batch_size)</span><br><span class="line">        <span class="keyword">for</span> idx_epoch <span class="keyword">in</span> <span class="built_in">range</span>(self.max_epoch):</span><br><span class="line">            self.shuffle_data()</span><br><span class="line">            <span class="keyword">for</span> idx_batch <span class="keyword">in</span> <span class="built_in">range</span>(max_batch):</span><br><span class="line">                batch_images = self.train_data[idx_batch * self.batch_size:(idx_batch + <span class="number">1</span>) * self.batch_size, :-<span class="number">1</span>]</span><br><span class="line">                batch_labels = self.train_data[idx_batch * self.batch_size:(idx_batch + <span class="number">1</span>) * self.batch_size, -<span class="number">1</span>]</span><br><span class="line">                prob = self.forward(batch_images)</span><br><span class="line">                loss = self.softmax.get_loss(batch_labels)</span><br><span class="line">                self.backward()</span><br><span class="line">                self.update(self.lr)</span><br><span class="line">                <span class="keyword">if</span> idx_batch % self.print_iter == <span class="number">0</span>:</span><br><span class="line">                    <span class="built_in">print</span>(<span class="string">&#x27;Epoch %d, iter %d, loss: %.6f&#x27;</span> % (idx_epoch, idx_batch, loss))</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">load_model</span>(<span class="params">self, param_dir</span>):</span><br><span class="line">        params = np.load(param_dir, allow_pickle=<span class="literal">True</span>).item()</span><br><span class="line">        self.fc1.load_param(params[<span class="string">&#x27;w1&#x27;</span>], params[<span class="string">&#x27;b1&#x27;</span>])</span><br><span class="line">        self.fc2.load_param(params[<span class="string">&#x27;w2&#x27;</span>], params[<span class="string">&#x27;b2&#x27;</span>])</span><br><span class="line">        self.fc3.load_param(params[<span class="string">&#x27;w3&#x27;</span>], params[<span class="string">&#x27;b3&#x27;</span>])</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">evaluate</span>(<span class="params">self</span>):</span><br><span class="line">        pred_results = np.zeros([self.test_data.shape[<span class="number">0</span>]])</span><br><span class="line">        <span class="keyword">for</span> idx <span class="keyword">in</span> <span class="built_in">range</span>(<span class="built_in">int</span>(self.test_data.shape[<span class="number">0</span>] / self.batch_size)):</span><br><span class="line">            batch_images = self.test_data[idx * self.batch_size:(idx + <span class="number">1</span>) * self.batch_size, :-<span class="number">1</span>]</span><br><span class="line">            prob = self.forward(batch_images)</span><br><span class="line">            pred_labels = np.argmax(prob, axis=<span class="number">1</span>)</span><br><span class="line">            pred_results[idx * self.batch_size:(idx + <span class="number">1</span>) * self.batch_size] = pred_labels</span><br><span class="line">        accuracy = np.mean(pred_results == self.test_data[:, -<span class="number">1</span>])</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&#x27;Accuracy in test set: %f&#x27;</span> % accuracy)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    h1, h2, e = <span class="number">128</span>, <span class="number">32</span>, <span class="number">25</span></span><br><span class="line">    mlp = MNIST_MLP(hidden1=h1, hidden2=h2, max_epoch=e)</span><br><span class="line">    mlp.load_data()</span><br><span class="line">    mlp.build_model()</span><br><span class="line">    mlp.init_model()</span><br><span class="line">    mlp.train()</span><br><span class="line">    mlp.save_model(<span class="string">&#x27;mlp-%d-%d-%depoch.npy&#x27;</span> % (h1, h2, e))</span><br><span class="line">    mlp.load_model(<span class="string">&#x27;mlp-%d-%d-%depoch.npy&#x27;</span> % (h1, h2, e))</span><br><span class="line">    mlp.evaluate()</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/ai/" rel="tag"># ai</a>
+              <a href="/tags/%E6%99%BA%E8%83%BD%E8%AE%A1%E7%AE%97%E7%B3%BB%E7%BB%9F/" rel="tag"># 智能计算系统</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/03/23/%E5%85%B3%E4%BA%8Egit%20merge/" rel="prev" title="设置git mergetool为vscode">
+      <i class="fa fa-chevron-left"></i> 设置git mergetool为vscode
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/04/15/%E6%99%BA%E8%83%BD%E8%AE%A1%E7%AE%97%E7%B3%BB%E7%BB%9F2/" rel="next" title="智能计算系统 lab3.1 深度学习">
+      智能计算系统 lab3.1 深度学习 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">wyl</p>
+  <div class="site-description" itemprop="description">Just HelloWorld</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">wyl</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : '0jwaU0bESSetUEpTsOd219tx-gzGzoHsz',
+      appKey     : 'z8S7DcyrCBA9xTDpmQ03i0FC',
+      placeholder: "emmmm",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : true,
+      lang       : 'zh-cn' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>
